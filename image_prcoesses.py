@@ -1,35 +1,12 @@
-# This is a sample Python script.
-import operator
-
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
-
-
-def display_image(img):
-    cv2.imshow('Sudoku', img)  # Display the image
-    cv2.waitKey(0)  # Wait for any key to be pressed (with the image window active)
-    cv2.destroyAllWindows()  # Close all windows
-
-
-def display_points(in_img, points, radius=5, colour=(0, 0, 255)):
-    img = in_img.copy()
-    if len(colour) == 3:
-        if len(img.shape) == 2:
-            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-        elif img.shape[2] == 1:
-            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-
-    for point in points:
-        img = cv2.circle(img, tuple(int(x) for x in point), radius, colour, -1)
-    display_image(img)
-    return img
 
 
 # we will blur the image using gaussian blur in order to reduxce the blur in adavaptive thresholding
 # cv2.ADAPTIVE_THRESH_GAUSSIAN_C : threshold value is the weighted sum of neighbourhood values where weights are a
 # gaussian window.
 def processing(img):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # Note that kernel sizes must be positive and odd and the kernel must be square.
     process = cv2.GaussianBlur(img.copy(), (9, 9), 0)
 
@@ -49,17 +26,56 @@ def processing(img):
     return process
 
 
-def perspective_transform(image, corners):
-    def order_corner_points(corners):
-        # Separate corners into individual points
-        # Index 0 - top-right
-        #       1 - top-left
-        #       2 - bottom-left
-        #       3 - bottom-right
-        corners = [(corner[0][0], corner[0][1]) for corner in corners]
-        top_r, top_l, bottom_l, bottom_r = corners[0], corners[1], corners[2], corners[3]
-        return (top_l, top_r, bottom_r, bottom_l)
+def find_corners(img):
+    # findContours: boundaries of shapes having same intensity
+    # CHAIN_APPROX_SIMPLE - stores only minimal information of points to describe contour
+    # -> RETR_EXTERNAL: gives "outer" contours, so if you have (say) one contour enclosing another (like concentric circles), only the outermost is given.
+    # cv2.ContourArea(): Finds area of outermost polygon(largest feature) in img.
+    ext_contours = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    ext_contours = ext_contours[0] if len(ext_contours) == 2 else ext_contours[1]
+    ext_contours = sorted(ext_contours, key=cv2.contourArea, reverse=True)
 
+    # loop runs only once
+    for c in ext_contours:
+        peri = cv2.arcLength(c, True)
+        # cv2.approxPolyDP(curve, epsilon, closed[, approxCurve])
+        # Curve-> hers is the largest contour
+        # epsilon -> Parameter specifying the approximation accuracy. This is the maximum distance between the original curve and its approximation.
+        # closed – If true, the approximated curve is closed. Otherwise, it is not closed.
+        # approxPolyDP returns the approximate curve in the same type as the input curve
+        approx = cv2.approxPolyDP(c, 0.015 * peri, True)
+        if len(approx) == 4:
+            # Here we are looking for the largest 4 sided contour
+            return approx
+
+
+    # Ramer Doughlas Peucker algorithm:
+    # bottom_right, _ = max(enumerate([pt[0][0] + pt[0][1] for pt in
+    #                                  ext_contours[0]]), key=operator.itemgetter(1))
+    # top_left, _ = min(enumerate([pt[0][0] + pt[0][1] for pt in
+    #                             ext_contours[0]]), key=operator.itemgetter(1))
+    # bottom_left, _ = min(enumerate([pt[0][0] - pt[0][1] for pt in
+    #                                 ext_contours[0]]), key=operator.itemgetter(1))
+    # top_right, _ = max(enumerate([pt[0][0] - pt[0][1] for pt in
+    #                               ext_contours[0]]), key=operator.itemgetter(1))
+
+
+def order_corner_points(corners):
+
+    # Corners[0],... stores in format [[x y]]
+    # Separate corners into individual points
+    # Index 0 - top-right
+    #       1 - top-left
+    #       2 - bottom-left
+    #       3 - bottom-right
+    corners = [(corner[0][0], corner[0][1]) for corner in corners]
+    top_r, top_l, bottom_l, bottom_r = corners[0], corners[1], corners[2], corners[3]
+    return top_l, top_r, bottom_r, bottom_l
+
+
+
+# Crop the image
+def perspective_transform(image, corners):
     # Order points in clockwise order
     ordered_corners = order_corner_points(corners)
     top_l, top_r, bottom_r, bottom_l = ordered_corners
@@ -84,43 +100,27 @@ def perspective_transform(image, corners):
     # Convert to Numpy format
     ordered_corners = np.array(ordered_corners, dtype="float32")
 
-    # Find perspective transform matrix
-    matrix = cv2.getPerspectiveTransform(ordered_corners, dimensions)
+    # calculate the perspective transform matrix and warp
+    # the perspective to grab the screen
+    grid = cv2.getPerspectiveTransform(ordered_corners, dimensions)
 
     # Return the transformed image
-    return cv2.warpPerspective(image, matrix, (width, height))
-
-
-def get_corners(img, original):
-    # findContours: boundaries of shapes having same intensity
-    # CHAIN_APPROX_SIMPLE - stores only minimal information of points to describe contour
-    # -> RETR_EXTERNAL: gives "outer" contours, so if you have (say) one contour enclosing another (like concentric circles), only the outermost is given.
-    # cv2.ContourArea(): Finds area of outermost polygon(largest feature) in img.
-    ext_contours, h = cv2.findContours(img.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    ext_contours = ext_contours[0] if len(ext_contours) == 2 else ext_contours[1]
-    ext_contours = sorted(ext_contours, key=cv2.contourArea, reverse=True)
-    # Sort by area, descending
-    # Therefore the largest ploygon is stored in contours[0]
-
-    for c in ext_contours:
-        peri = cv2.arcLength(c, True)
-        approx = cv2.approxPolyDP(c, 0.015 * peri, True)
-        transformed = perspective_transform(original, approx)
-        break
+    return cv2.warpPerspective(image, grid, (width, height))
 
 
 def main():
     print("Enter image name: ")
-    image_url = input()
-    img = cv2.imread(image_url, cv2.IMREAD_GRAYSCALE)
+    # image_url = input()
+    img = cv2.imread('sudoku_1.jpg')
 
     processed_sudoku = processing(img)
-    get_corners(processed_sudoku, image_url)
-
+    sudoku = find_corners(processed_sudoku)
+    transformed = perspective_transform(img, sudoku)
+    cv2.imshow('transformed', transformed)
+    cv2.imwrite('board.png', transformed)
+    cv2.waitKey()
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     main()
-
-# sudoku_1.jpg
