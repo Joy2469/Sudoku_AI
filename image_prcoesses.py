@@ -1,5 +1,12 @@
+import os
 import cv2
 import numpy as np
+
+
+def display_image(img):
+    cv2.imshow('image', img)  # Display the image
+    cv2.waitKey(0)  # Wait for any key to be pressed (with the image window active)
+    cv2.destroyAllWindows()  # Close all windows
 
 
 # we will blur the image using gaussian blur in order to reduxce the blur in adavaptive thresholding
@@ -18,6 +25,7 @@ def processing(img):
 
     # we need grid edges so we need to invert colors
     process = cv2.bitwise_not(process, process)
+    display_image(process)
     # np.uint8 will wrap.
     # For example, 235+30 = 9.
     kernel = np.array([[0., 1., 0.], [1., 1., 1.], [0., 1., 0.]], np.uint8)
@@ -48,7 +56,6 @@ def find_corners(img):
             # Here we are looking for the largest 4 sided contour
             return approx
 
-
     # Ramer Doughlas Peucker algorithm:
     # bottom_right, _ = max(enumerate([pt[0][0] + pt[0][1] for pt in
     #                                  ext_contours[0]]), key=operator.itemgetter(1))
@@ -61,7 +68,6 @@ def find_corners(img):
 
 
 def order_corner_points(corners):
-
     # Corners[0],... stores in format [[x y]]
     # Separate corners into individual points
     # Index 0 - top-right
@@ -71,7 +77,6 @@ def order_corner_points(corners):
     corners = [(corner[0][0], corner[0][1]) for corner in corners]
     top_r, top_l, bottom_l, bottom_r = corners[0], corners[1], corners[2], corners[3]
     return top_l, top_r, bottom_r, bottom_l
-
 
 
 # Crop the image
@@ -108,18 +113,56 @@ def perspective_transform(image, corners):
     return cv2.warpPerspective(image, grid, (width, height))
 
 
+
+def create_image_grid(img):
+    grid = np.copy(img)
+    #not all sudoku out there have same width and height in the small squares so we need to consider differnt heights and width
+    edge_h = np.shape(grid)[0]
+    edge_w = np.shape(grid)[1]
+    celledge_h = edge_h // 9
+    celledge_w = np.shape(grid)[1] // 9
+
+    grid = cv2.cvtColor(grid, cv2.COLOR_BGR2GRAY)
+    # Adaptive thresholding the cropped grid and inverting it
+    grid = cv2.bitwise_not(cv2.adaptiveThreshold(grid, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 101, 1))
+
+    tempgrid = []
+    for i in range(celledge_h, edge_h + 1, celledge_h):
+        for j in range(celledge_w, edge_w + 1, celledge_w):
+            rows = grid[i - celledge_h:i]
+            tempgrid.append([rows[k][j - celledge_w:j] for k in range(len(rows))])
+
+    # Creating the 9X9 grid of images
+    finalgrid = []
+    for i in range(0, len(tempgrid) - 8, 9):
+        finalgrid.append(tempgrid[i:i + 9])
+
+    # Converting all the cell images to np.array
+    for i in range(9):
+        for j in range(9):
+            finalgrid[i][j] = np.array(finalgrid[i][j])
+    try:
+        for i in range(9):
+            for j in range(9):
+                os.remove("BoardCells/cell" + str(i) + str(j) + ".jpg")
+    except:
+        pass
+    for i in range(9):
+        for j in range(9):
+            cv2.imwrite(str("BoardCells/cell" + str(i) + str(j) + ".jpg"), finalgrid[i][j])
+    return finalgrid
+
+
 def main():
     print("Enter image name: ")
     # image_url = input()
     img = cv2.imread('sudoku_1.jpg')
-
     processed_sudoku = processing(img)
     sudoku = find_corners(processed_sudoku)
     transformed = perspective_transform(img, sudoku)
-    cv2.imshow('transformed', transformed)
-    cv2.imwrite('board.png', transformed)
-    cv2.waitKey()
-
+    cropped = 'cropped_img.png'
+    cv2.imwrite(cropped, transformed)
+    sudoku = create_image_grid(transformed)
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
