@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-# Creating a model
 import numpy
 from keras.datasets import mnist
 from keras.models import Sequential
@@ -81,7 +79,6 @@ def evaluate_model(X_train, y_Train, n_folds=5):
         # select rows for train and test
         trainX, trainY, testX, testY = X_train[x_train], y_Train[x_train], X_train[x_test], y_Train[x_test]
         # fit model
-        # it is different fitting from the one used earlier as i was trying to test out different possibilities
         data_fit = model.fit(trainX, trainY, validation_data=(testX, testY), epochs=10, batch_size=32)
         # evaluate model
         _, acc = model.evaluate(testX, testY, verbose=0)
@@ -119,7 +116,7 @@ def summarize_performance(acc):
 # --------------------------------------------------------------
 
 # This function predicts the images already in the dataset
-def test(X_train):
+def test(X_train, model):
     test_images = X_train[1:5]
     test_images = test_images.reshape(test_images.shape[0], 28, 28)
 
@@ -136,32 +133,29 @@ def test(X_train):
 
     plt.show()
 
+
 def run():
     X_test, y_test, X_train, y_train = input_data()
 
-    ## Evaluate
-    # accuracy, data = evaluate_model(X_train, y_train)
+    # Evaluate
+    #accuracy, data = evaluate_model(X_train, y_train)
     # summarize_diagnostics(data)
     # summarize_performance(accuracy)
-
-    # create model
     model = create_model()
-    # fitting the model
     model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10, batch_size=200)
-
     # TEST
-    # for images already in the dataset
-    # test(X_train)
-    test_loss, test_acc = model.evaluate(X_test, y_test)
-    print(test_acc)
+    # for images alreday
+    test(X_train, model)
 
-    # save model
     # serialize model to JSON
     model_json = model.to_json()
-    with open("models/model.json", "w") as json_file:
+    with open("model.json", "w") as json_file:
         json_file.write(model_json)
-    model.save_weights("final_model.h5")
+    # serialize weights to HDF5
+    model.save_weights("model.h5")
     print("Saved model to disk")
+
+
 
 
 run()
