@@ -1,4 +1,10 @@
-import os
+"""
+This file asks the user for file name of th sudoku, pre-porcesses it,
+finds the corners, crops the sudoku board
+and returns the array of the cells of the sudoku
+"""
+
+
 import cv2
 import numpy as np
 
@@ -25,7 +31,7 @@ def processing(img):
 
     # we need grid edges so we need to invert colors
     process = cv2.bitwise_not(process, process)
-    display_image(process)
+
     # np.uint8 will wrap.
     # For example, 235+30 = 9.
     kernel = np.array([[0., 1., 0.], [1., 1., 1.], [0., 1., 0.]], np.uint8)
@@ -124,7 +130,7 @@ def create_image_grid(img):
 
     grid = cv2.cvtColor(grid, cv2.COLOR_BGR2GRAY)
     # Adaptive thresholding the cropped grid and inverting it
-    grid = cv2.bitwise_not(cv2.adaptiveThreshold(grid, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 101, 1))
+    grid = cv2.bitwise_not(grid, grid)
 
     tempgrid = []
     for i in range(celledge_h, edge_h + 1, celledge_h):
@@ -141,29 +147,33 @@ def create_image_grid(img):
     for i in range(9):
         for j in range(9):
             finalgrid[i][j] = np.array(finalgrid[i][j])
-    try:
-        for i in range(9):
-            for j in range(9):
-                os.remove("BoardCells/cell" + str(i) + str(j) + ".jpg")
-    except:
-        pass
-    for i in range(9):
-        for j in range(9):
-            cv2.imwrite(str("BoardCells/cell" + str(i) + str(j) + ".jpg"), finalgrid[i][j])
+
+    # try:
+    #     for i in range(9):
+    #         for j in range(9):
+    #             os.remove("BoardCells/cell" + str(i) + str(j) + ".jpg")
+    # except:
+    #     pass
+    # for i in range(9):
+    #     for j in range(9):
+    #         cv2.imwrite(str("BoardCells/cell" + str(i) + str(j) + ".jpg"), finalgrid[i][j])
+
+
     return finalgrid
 
 
-def main():
-    print("Enter image name: ")
+def extract():
+    # print("Enter image name: ")
     # image_url = input()
     img = cv2.imread('sudoku_1.jpg')
     processed_sudoku = processing(img)
     sudoku = find_corners(processed_sudoku)
     transformed = perspective_transform(img, sudoku)
     cropped = 'cropped_img.png'
+
     cv2.imwrite(cropped, transformed)
     sudoku = create_image_grid(transformed)
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    main()
+
+# if __name__ == '__main__':
+#     main()
