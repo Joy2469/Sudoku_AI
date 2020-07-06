@@ -4,7 +4,6 @@ finds the corners, crops the sudoku board
 and returns the array of the cells of the sudoku
 """
 
-
 import cv2
 import numpy as np
 
@@ -18,7 +17,7 @@ def display_image(img):
 # we will blur the image using gaussian blur in order to reduxce the blur in adavaptive thresholding
 # cv2.ADAPTIVE_THRESH_GAUSSIAN_C : threshold value is the weighted sum of neighbourhood values where weights are a
 # gaussian window.
-def processing(img):
+def processing(img, skip_dilate=False):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # Note that kernel sizes must be positive and odd and the kernel must be square.
     process = cv2.GaussianBlur(img.copy(), (9, 9), 0)
@@ -32,10 +31,12 @@ def processing(img):
     # we need grid edges so we need to invert colors
     process = cv2.bitwise_not(process, process)
 
-    # np.uint8 will wrap.
-    # For example, 235+30 = 9.
-    kernel = np.array([[0., 1., 0.], [1., 1., 1.], [0., 1., 0.]], np.uint8)
-    process = cv2.dilate(process, kernel)
+    if not skip_dilate:
+        # This is only used for sudoku processing and not for cell processing
+        # np.uint8 will wrap.
+        # For example, 235+30 = 9.
+        kernel = np.array([[0., 1., 0.], [1., 1., 1.], [0., 1., 0.]], np.uint8)
+        process = cv2.dilate(process, kernel)
 
     return process
 
@@ -119,18 +120,20 @@ def perspective_transform(image, corners):
     return cv2.warpPerspective(image, grid, (width, height))
 
 
-
 def create_image_grid(img):
     grid = np.copy(img)
-    #not all sudoku out there have same width and height in the small squares so we need to consider differnt heights and width
+    # not all sudoku out there have same width and height in the small squares so we need to consider differnt heights and width
     edge_h = np.shape(grid)[0]
     edge_w = np.shape(grid)[1]
     celledge_h = edge_h // 9
     celledge_w = np.shape(grid)[1] // 9
 
     grid = cv2.cvtColor(grid, cv2.COLOR_BGR2GRAY)
+    display_image(grid)
     # Adaptive thresholding the cropped grid and inverting it
     grid = cv2.bitwise_not(grid, grid)
+
+    display_image(grid)
 
     tempgrid = []
     for i in range(celledge_h, edge_h + 1, celledge_h):
@@ -148,18 +151,52 @@ def create_image_grid(img):
         for j in range(9):
             finalgrid[i][j] = np.array(finalgrid[i][j])
 
-    # try:
-    #     for i in range(9):
-    #         for j in range(9):
-    #             os.remove("BoardCells/cell" + str(i) + str(j) + ".jpg")
-    # except:
-    #     pass
-    # for i in range(9):
-    #     for j in range(9):
-    #         cv2.imwrite(str("BoardCells/cell" + str(i) + str(j) + ".jpg"), finalgrid[i][j])
-
+    try:
+        for i in range(9):
+            for j in range(9):
+                np.os.remove("BoardCells/cell" + str(i) + str(j) + ".jpg")
+    except:
+        pass
+    for i in range(9):
+        for j in range(9):
+            cv2.imwrite(str("BoardCells/cell" + str(i) + str(j) + ".jpg"), finalgrid[i][j])
 
     return finalgrid
+
+
+def scale_and_centre(img, size, margin=0, background=0):
+    """Scales and centres an image onto a new background square."""
+    h, w = img.shape[:2]
+
+    def centre_pad(length):
+        """Handles centering for a given length that may be odd or even."""
+        if length % 2 == 0:
+            side1 = int((size - length) / 2)
+            side2 = side1
+        else:
+            side1 = int((size - length) / 2)
+            side2 = side1 + 1
+        return side1, side2
+
+    def scale(r, x):
+        return int(r * x)
+
+    if h > w:
+        t_pad = int(margin / 2)
+        b_pad = t_pad
+        ratio = (size - margin) / h
+        w, h = scale(ratio, w), scale(ratio, h)
+        l_pad, r_pad = centre_pad(w)
+    else:
+        l_pad = int(margin / 2)
+        r_pad = l_pad
+        ratio = (size - margin) / w
+        w, h = scale(ratio, w), scale(ratio, h)
+        t_pad, b_pad = centre_pad(h)
+
+    img = cv2.resize(img, (w, h))
+    img = cv2.copyMakeBorder(img, t_pad, b_pad, l_pad, r_pad, cv2.BORDER_CONSTANT, None, background)
+    return cv2.resize(img, (size, size))
 
 
 def extract():
@@ -170,9 +207,10 @@ def extract():
     sudoku = find_corners(processed_sudoku)
     transformed = perspective_transform(img, sudoku)
     cropped = 'cropped_img.png'
-
     cv2.imwrite(cropped, transformed)
+    transformed = cv2.resize(transformed, (450, 450))
     sudoku = create_image_grid(transformed)
+    return sudoku
 
 
 # if __name__ == '__main__':
