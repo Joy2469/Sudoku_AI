@@ -129,11 +129,10 @@ def create_image_grid(img):
     celledge_w = np.shape(grid)[1] // 9
 
     grid = cv2.cvtColor(grid, cv2.COLOR_BGR2GRAY)
-    display_image(grid)
+
     # Adaptive thresholding the cropped grid and inverting it
     grid = cv2.bitwise_not(grid, grid)
 
-    display_image(grid)
 
     tempgrid = []
     for i in range(celledge_h, edge_h + 1, celledge_h):
@@ -154,17 +153,17 @@ def create_image_grid(img):
     try:
         for i in range(9):
             for j in range(9):
-                np.os.remove("BoardCells/cell" + str(i) + str(j) + ".jpg")
+                np.os.remove("BoardCells1/cell" + str(i) + str(j) + ".jpg")
     except:
         pass
     for i in range(9):
         for j in range(9):
-            cv2.imwrite(str("BoardCells/cell" + str(i) + str(j) + ".jpg"), finalgrid[i][j])
+            cv2.imwrite(str("BoardCells1/cell" + str(i) + str(j) + ".jpg"), finalgrid[i][j])
 
     return finalgrid
 
 
-def scale_and_centre(img, size, margin=0, background=0):
+def scale_and_centre(img, size, margin=20, background=0):
     """Scales and centres an image onto a new background square."""
     h, w = img.shape[:2]
 
@@ -214,4 +213,4 @@ def extract():
 
 
 # if __name__ == '__main__':
-#     main()
+#     extract()
