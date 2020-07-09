@@ -147,15 +147,12 @@ def run():
     # for images alreday
     test(X_train, model)
 
-    # serialize model to JSON
-    model_json = model.to_json()
-    with open("model.json", "w") as json_file:
-        json_file.write(model_json)
-    # serialize weights to HDF5
-    model.save_weights("model.h5")
+
+    # save model and architecture to single file
+    model.save("model.h5")
     print("Saved model to disk")
 
 
 
 
-run()
+# run()
