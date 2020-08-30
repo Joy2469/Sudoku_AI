@@ -25,4 +25,41 @@ Access the written tutorial of [SudkoAI](https://becominghuman.ai/image-processi
 5. **Solving the Sudoku**
 
 ## Steps in deatil
-###
+### Sudoku
+![](https://github.com/Joy2469/Sudoku_AI/blob/master/images/sudoku_1.jpg) 
+### Pre Processing the Image
+![](https://github.com/Joy2469/Sudoku_AI/blob/master/images/grey_scale.png) \
+![](https://github.com/Joy2469/Sudoku_AI/blob/master/images/processed.png)
+### Sudoku Extraction
+![](https://github.com/Joy2469/Sudoku_AI/blob/master/images/pre_processed.png) \
+![](https://github.com/Joy2469/Sudoku_AI/blob/master/images/cropped.png) \
+![](https://github.com/Joy2469/Sudoku_AI/blob/master/images/processed_sudoku.png) \
+
+
+### Interpreting the Digits
+![](https://github.com/Joy2469/Sudoku_AI/blob/master/images/extracted_cell.png) \
+![](https://github.com/Joy2469/Sudoku_AI/blob/master/images/cell_contour.png) \
+![](https://github.com/Joy2469/Sudoku_AI/blob/master/images/model.png) 
+![](https://github.com/Joy2469/Sudoku_AI/blob/master/images/number.png) \
+![](https://github.com/Joy2469/Sudoku_AI/blob/master/images/predicted_num.png) 
+### Solving
+![](https://github.com/Joy2469/Sudoku_AI/blob/master/images/sudokuboard.png) \
+![](https://github.com/Joy2469/Sudoku_AI/blob/master/images/Solved.png) 
+
+
+
+# Run
+```
+python3 main.py
+```
+
+
+# Resources:
+[Deep Learning Introduction](https://medium.com/r/?url=https%3A%2F%2Fwww.forbes.com%2Fsites%2Fbernardmarr%2F2018%2F10%2F01%2Fwhat-is-deep-learning-ai-a-simple-guide-with-8-practical-examples%2F%235a233f778d4b)<br/>
+[Install Tensorflow](https://medium.com/@cran2367/install-and-setup-tensorflow-2-0-2c4914b9a265)<br/>
+[Why Data Normalizing](https://medium.com/@urvashilluniya/why-data-normalization-is-necessary-for-machine-learning-models-681b65a05029)<br/>
+[One-Hot Code](https://medium.com/r/?url=https%3A%2F%2Fmachinelearningmastery.com%2Fwhy-one-hot-encode-data-in-machine-learning%2F)<br/>
+[Understanding of Convolutional Neural Network (CNN)](https://medium.com/@RaghavPrabhu/understanding-of-convolutional-neural-network-cnn-deep-learning-99760835f148%20https://www.youtube.com/watch?v=YRhxdVk_sIs)<br/>
+[CNN layers](https://medium.com/r/?url=https%3A%2F%2Fwww.tensorflow.org%2Fapi_docs%2Fpython%2Ftf%2Fkeras%2Flayers%2FLayer)<br/>
+[K-cross Validation](https://medium.com/r/?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DTIgfjmp-4BA)<br/>
+[Plotting Graphs](https://medium.com/r/?url=https%3A%2F%2Fmatplotlib.org%2Fapi%2Fpyplot_api.html)<br/>
