@@ -6,6 +6,13 @@ Access the written tutorial of [SudkoAI](https://becominghuman.ai/image-processi
 **Part 1:** [Image Processing](https://becominghuman.ai/image-processing-sudokuai-opencv-45380715a629) \
 **Part 2:** [Sudoku and Cell Extraction](https://medium.com/@aditijain0424/sudoku-and-cell-extraction-sudokuai-opencv-38b603066066) \
 **Part 3:** [Solving the Sudoku](https://medium.com/@aditijain0424/part-3-solving-the-sudoku-ai-solver-13f64a090922)
+
+
+# Run
+```
+python3 main.py
+```
+
 ## Steps
 1. **Import the image**
 2. **Pre Processing the Image** \
@@ -47,11 +54,6 @@ Access the written tutorial of [SudkoAI](https://becominghuman.ai/image-processi
 ![](https://github.com/Joy2469/Sudoku_AI/blob/master/images/Solved.png) 
 
 
-
-# Run
-```
-python3 main.py
-```
 
 
 # Resources:
