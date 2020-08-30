@@ -1,4 +1,4 @@
-#Sudoku_openCV
+# Sudoku_openCV
 We will be creating a Sudoku Solver AI using python and Open CV to read a Sudoku puzzle from an image and solving it. There a lot of methods to achieve this goal. Thus in this series, I have compiled the best methods I could find/research along with some hacks/tricks I learned along the way.
 
 ## Tutorial 
